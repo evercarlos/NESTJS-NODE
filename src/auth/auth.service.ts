@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/login-auth.dto';
-import { UpdateAuthDto } from './dto/register-auth.dto';
+import { Injectable, HttpException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose'
+import { RegisterAuthDto } from './dto/register-auth.dto';
+import { hash, compare } from 'bcrypt'
+import { User, UserDocument } from './schema/user.schema';
+import { Model } from 'mongoose';
+import { LoginAuthDto } from './dto/login-auth.dto';
+import { JwtService } from '@nestjs/jwt'
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private jwtAuthService: JwtService
+  ){}
+  // jalar datos de la bd
+  async register(userObject: RegisterAuthDto) {
+    const { password } = userObject; //TODO 123456
+    const plainToHash = await hash(password, 10)
+    userObject = {...userObject, password: plainToHash}
+    return this.userModel.create(userObject)
   }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
+  async login(userObject: LoginAuthDto) {
+    const { email, password } = userObject;
+    const findUser = await this.userModel.findOne({email}); // email:email
+    if(!findUser) throw new HttpException('USER_NOT_FUND', 404);
+    
+    const checkPassword = await compare(password, findUser.password)
+    
+    if(!checkPassword) throw new HttpException('PASSWORD INCORRECTO', 403);
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+    const payload = {id:findUser._id, name: findUser.name}
+    const token = await this.jwtAuthService.sign(payload);
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+    const data = {
+      user: findUser,
+      token,
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+    return data;
+
   }
 }

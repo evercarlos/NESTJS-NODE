@@ -1,11 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 
+@ApiBearerAuth() // add para wsagger que implemente el candado
 @ApiTags('items') // decorador: decimos al decorador todo este controlador va ser al tag de items
+//@UseGuards(JwtAuthGuard)// proteje todo el controlador
 @Controller('items')
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
@@ -15,6 +18,7 @@ export class ItemsController {
     return this.itemsService.create(createItemDto);
   }
 
+  @UseGuards(JwtAuthGuard) // PARA TOKEN
   @Get()
   findAll() {
     return this.itemsService.findAll();
