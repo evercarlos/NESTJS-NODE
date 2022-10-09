@@ -10,8 +10,6 @@ Necesitaremos tener instaladas en nuestra máquina local:
 
 > **Nodejs**: versión 14.X
 
-> **Serverless**: Framework Core versión 3.2 ó superior y SDK versión 4.3 ó superior
-
 > **Mongo**: versión 5.0.8 superior
 
 ### Base de datos MONGODB
